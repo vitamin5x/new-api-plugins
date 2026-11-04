@@ -452,11 +452,17 @@
         "doubao-seedance-2-0-260128",
         "doubao-seedance-2-0-fast-260128",
         "doubao-seedance-2-0-mini-260615",
-        "doubao-seedance-2-5-260628",
-        "ark-asset-library"
+        "doubao-seedance-2-5-260628"
       ],
-      "latest": "1.0.0",
+      "latest": "1.1.0",
       "versions": [
+        {
+          "version": "1.1.0",
+          "path": "plugins/tasks/ark/1.1.0/plugin.js",
+          "sha256": "b49df105030a13622fbb972b71e5e5a4f454d67f7d40f5fb15400e8c782d1f7c",
+          "minApiVersion": 1,
+          "kind": "task"
+        },
         {
           "version": "1.0.0",
           "path": "plugins/tasks/ark/1.0.0/plugin.js",
