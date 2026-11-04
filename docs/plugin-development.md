@@ -283,13 +283,26 @@ once. Treat "descriptor with no body" as a bug, not a style choice.
    if (body.error) throw new Error((body.error.Code || "upstream_error") + ": " + (body.error.Message || "request failed"));
    ```
 
-6. **Report usage facts, never prices.** Return `null` from `extractUsage` for
-   routes that create no task, so they reserve nothing:
+6. **Report usage facts, never prices.** Return real numbers, not `null`, for
+   routes that create no task. The host evaluates the model's price expression
+   on every route that has one, and a fact the plugin omits reads as `null`
+   inside that expression, which fails with
+   `invalid operation: <nil> * float64` and answers `400` before the call is
+   forwarded. Report the model's own declared fields at zero instead: zero
+   prices every tier at nothing, so the route still reserves no quota, and any
+   expression compatible with the schema stays evaluable.
 
    ```js
-   // Pass-through and delete requests create no task and are not metered.
-   if (isAssetAction(ctx.action) || ctx.action === "delete_task") return null;
+   // Pass-through and delete requests create no task and are not metered. They
+   // still report every field the profile declares, at the value that prices
+   // the call at nothing.
+   if (isPassThroughAction(ctx.action)) return passThroughUsageFacts(ctx);
    ```
+
+   This bites only when the gateway actually holds a price expression for the
+   model. With none configured the route falls back to per-call pricing and
+   `null` looks correct, so test the route on a gateway that prices the model by
+   expression, not only on a bare development instance.
 
 7. **Reserve generously, settle exactly.** At submit time you may not know the
    final length; hold the model's maximum and overlay the real facts from the
@@ -453,6 +466,7 @@ Symptom → cause, fastest first:
 | `415 this route requires a JSON or multipart body` | §4.1 — send `body: {}` |
 | `400 decoded request is missing a model` | §4.2 — decoder returned no model |
 | `400 model "x" is not served by this plugin` | §4.2 — name missing from `meta.models` |
+| `400 expr run error: invalid operation: <nil> * float64` | §6.6 — `extractUsage` returned `null` (or omitted a fact) on a model the gateway prices by expression. Report the profile's fields at zero instead. |
 | `503 Task request failed` + `no_available_channel` | §4.3 — placeholder model, or the channel doesn't list it |
 | `500 internal plugin route error` + panic in logs | §4.4 — descriptor returned no body |
 | `404` on a mirror of a vendor path | §3 — reserved namespace; serve it one segment in |
@@ -466,7 +480,7 @@ separates a plugin fault from an account or upstream fault in one call.
 
 ## 9. Worked example: the Ark plugin
 
-`plugins/tasks/ark/1.1.0/plugin.js` — four routes covering three shapes:
+`plugins/tasks/ark/1.2.0/plugin.js` — four routes covering three shapes:
 
 | Route | Type | Why |
 | --- | --- | --- |
@@ -485,6 +499,10 @@ Three ideas are worth copying:
 - **A shared capability table.** One `VIDEO_MODELS` map drives `meta.models`, the
   per-model resolution validation, *and* the generated `usageProfiles`, so the
   pricing table cannot drift from what the plugin actually accepts.
+- **Unmetered routes report zeros, not nothing.** `passThroughUsageFacts` derives
+  its keys from the same `usageSchema` the model declares, so zero-priced
+  pass-through routes stay evaluable under any expression (§6.6) without
+  duplicating the field list.
 
 ## 10. New-plugin checklist
 
@@ -496,7 +514,7 @@ Three ideas are worth copying:
 - [ ] `query` routes have no body; `submit`/`dynamic` routes always send one
 - [ ] Every decoder returns a non-empty, declared, channel-routable `model`
 - [ ] Answers-once routes use `retainResult: false` and return an immediate terminal result
-- [ ] `extractUsage` returns `null` where nothing is metered
+- [ ] `extractUsage` reports zero-valued facts (never `null`) where nothing is metered
 - [ ] Vendor response envelopes passed through untouched
 - [ ] HTTP calls routed through `apiRoot()`/`assetRoot()`-style helpers for both upstream kinds
 - [ ] No credentials, headers, bodies, or private URLs printed from plugin code
