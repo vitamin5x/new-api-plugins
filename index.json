@@ -1,0 +1,470 @@
+{
+  "indexVersion": 1,
+  "name": "OpCopilot Plugins",
+  "plugins": [
+    {
+      "key": "ark",
+      "name": "Ark",
+      "icon": "Ark.Color",
+      "description": {
+        "en": "Volcengine Ark Seedance video generation and asset library through an upstream New API gateway",
+        "zh": "经上游 New API 网关接入的火山方舟 Seedance 视频生成与素材库"
+      },
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/ark/api/v3/contents/generations/tasks",
+          "type": "submit",
+          "decode": "createTask",
+          "render": "taskCreated"
+        },
+        {
+          "method": "GET",
+          "path": "/ark/api/v3/contents/generations/tasks/:task_id",
+          "type": "query",
+          "render": "taskStatus",
+          "taskIdParam": "task_id"
+        },
+        {
+          "method": "POST",
+          "path": "/ark/api/v3/",
+          "type": "dynamic",
+          "decode": "decodeAssetAction",
+          "render": "renderAssetAction",
+          "retainResult": false
+        },
+        {
+          "method": "DELETE",
+          "path": "/ark/api/v3/contents/generations/tasks/:task_id",
+          "type": "dynamic",
+          "decode": "decodeTaskDelete",
+          "render": "renderTaskDelete",
+          "retainResult": false
+        }
+      ],
+      "protocols": [
+        {
+          "name": "openai_responses",
+          "supports": [
+            "stream",
+            "sync",
+            "background"
+          ]
+        },
+        {
+          "name": "openai_video",
+          "models": [
+            "doubao-seedance-2-0-260128",
+            "doubao-seedance-2-0-fast-260128",
+            "doubao-seedance-2-0-mini-260615",
+            "doubao-seedance-2-5-260628"
+          ]
+        }
+      ],
+      "usageSchema": {
+        "resolution": {
+          "enum": [
+            "480p",
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "description": {
+            "en": "Output video resolution",
+            "zh": "输出视频分辨率"
+          },
+          "enumLabels": {
+            "1080p": {
+              "en": "1080p",
+              "zh": "1080p"
+            },
+            "480p": {
+              "en": "480p",
+              "zh": "480p"
+            },
+            "4k": {
+              "en": "4k",
+              "zh": "4k"
+            },
+            "720p": {
+              "en": "720p",
+              "zh": "720p"
+            }
+          }
+        },
+        "tokens": {
+          "type": "number",
+          "unit": "token",
+          "description": {
+            "en": "Upstream billing token unit price",
+            "zh": "上游计费 Token 单价"
+          }
+        },
+        "video_input": {
+          "enum": [
+            "none",
+            "video"
+          ],
+          "description": {
+            "en": "Reference video input",
+            "zh": "参考视频输入"
+          },
+          "enumLabels": {
+            "none": {
+              "en": "No reference video",
+              "zh": "无参考视频"
+            },
+            "video": {
+              "en": "With reference video",
+              "zh": "有参考视频"
+            }
+          }
+        }
+      },
+      "usageExamples": [
+        {
+          "label": "480p · 5s",
+          "facts": {
+            "resolution": "480p",
+            "tokens": 48038,
+            "video_input": "none"
+          }
+        },
+        {
+          "label": "720p · 5s",
+          "facts": {
+            "resolution": "720p",
+            "tokens": 108000,
+            "video_input": "none"
+          }
+        },
+        {
+          "label": "1080p · 5s",
+          "facts": {
+            "resolution": "1080p",
+            "tokens": 243000,
+            "video_input": "none"
+          }
+        },
+        {
+          "label": "4k · 5s",
+          "facts": {
+            "resolution": "4k",
+            "tokens": 972000,
+            "video_input": "none"
+          }
+        },
+        {
+          "label": "720p · 5s (+4s 输入视频)",
+          "facts": {
+            "resolution": "720p",
+            "tokens": 194400,
+            "video_input": "video"
+          }
+        }
+      ],
+      "usageProfiles": [
+        {
+          "models": [
+            "doubao-seedance-2-0-260128"
+          ],
+          "schema": {
+            "resolution": {
+              "enum": [
+                "480p",
+                "720p",
+                "1080p",
+                "4k"
+              ],
+              "description": {
+                "en": "Output video resolution",
+                "zh": "输出视频分辨率"
+              },
+              "enumLabels": {
+                "1080p": {
+                  "en": "1080p",
+                  "zh": "1080p"
+                },
+                "480p": {
+                  "en": "480p",
+                  "zh": "480p"
+                },
+                "4k": {
+                  "en": "4k",
+                  "zh": "4k"
+                },
+                "720p": {
+                  "en": "720p",
+                  "zh": "720p"
+                }
+              }
+            },
+            "tokens": {
+              "type": "number",
+              "unit": "token",
+              "description": {
+                "en": "Upstream billing token unit price",
+                "zh": "上游计费 Token 单价"
+              }
+            },
+            "video_input": {
+              "enum": [
+                "none",
+                "video"
+              ],
+              "description": {
+                "en": "Reference video input",
+                "zh": "参考视频输入"
+              },
+              "enumLabels": {
+                "none": {
+                  "en": "No reference video",
+                  "zh": "无参考视频"
+                },
+                "video": {
+                  "en": "With reference video",
+                  "zh": "有参考视频"
+                }
+              }
+            }
+          },
+          "examples": [
+            {
+              "label": "480p · 5s",
+              "facts": {
+                "resolution": "480p",
+                "tokens": 48038,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 108000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "1080p · 5s",
+              "facts": {
+                "resolution": "1080p",
+                "tokens": 243000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "4k · 5s",
+              "facts": {
+                "resolution": "4k",
+                "tokens": 972000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s (+4s 输入视频)",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 194400,
+                "video_input": "video"
+              }
+            }
+          ]
+        },
+        {
+          "models": [
+            "doubao-seedance-2-0-fast-260128",
+            "doubao-seedance-2-0-mini-260615"
+          ],
+          "schema": {
+            "resolution": {
+              "enum": [
+                "480p",
+                "720p"
+              ],
+              "description": {
+                "en": "Output video resolution",
+                "zh": "输出视频分辨率"
+              },
+              "enumLabels": {
+                "480p": {
+                  "en": "480p",
+                  "zh": "480p"
+                },
+                "720p": {
+                  "en": "720p",
+                  "zh": "720p"
+                }
+              }
+            },
+            "tokens": {
+              "type": "number",
+              "unit": "token",
+              "description": {
+                "en": "Upstream billing token unit price",
+                "zh": "上游计费 Token 单价"
+              }
+            },
+            "video_input": {
+              "enum": [
+                "none",
+                "video"
+              ],
+              "description": {
+                "en": "Reference video input",
+                "zh": "参考视频输入"
+              },
+              "enumLabels": {
+                "none": {
+                  "en": "No reference video",
+                  "zh": "无参考视频"
+                },
+                "video": {
+                  "en": "With reference video",
+                  "zh": "有参考视频"
+                }
+              }
+            }
+          },
+          "examples": [
+            {
+              "label": "480p · 5s",
+              "facts": {
+                "resolution": "480p",
+                "tokens": 48038,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 108000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s (+4s 输入视频)",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 194400,
+                "video_input": "video"
+              }
+            }
+          ]
+        },
+        {
+          "models": [
+            "doubao-seedance-2-5-260628"
+          ],
+          "schema": {
+            "resolution": {
+              "enum": [
+                "480p",
+                "720p",
+                "1080p"
+              ],
+              "description": {
+                "en": "Output video resolution",
+                "zh": "输出视频分辨率"
+              },
+              "enumLabels": {
+                "1080p": {
+                  "en": "1080p",
+                  "zh": "1080p"
+                },
+                "480p": {
+                  "en": "480p",
+                  "zh": "480p"
+                },
+                "720p": {
+                  "en": "720p",
+                  "zh": "720p"
+                }
+              }
+            },
+            "tokens": {
+              "type": "number",
+              "unit": "token",
+              "description": {
+                "en": "Upstream billing token unit price",
+                "zh": "上游计费 Token 单价"
+              }
+            },
+            "video_input": {
+              "enum": [
+                "none",
+                "video"
+              ],
+              "description": {
+                "en": "Reference video input",
+                "zh": "参考视频输入"
+              },
+              "enumLabels": {
+                "none": {
+                  "en": "No reference video",
+                  "zh": "无参考视频"
+                },
+                "video": {
+                  "en": "With reference video",
+                  "zh": "有参考视频"
+                }
+              }
+            }
+          },
+          "examples": [
+            {
+              "label": "480p · 5s",
+              "facts": {
+                "resolution": "480p",
+                "tokens": 48038,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 108000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "1080p · 5s",
+              "facts": {
+                "resolution": "1080p",
+                "tokens": 243000,
+                "video_input": "none"
+              }
+            },
+            {
+              "label": "720p · 5s (+4s 输入视频)",
+              "facts": {
+                "resolution": "720p",
+                "tokens": 194400,
+                "video_input": "video"
+              }
+            }
+          ]
+        }
+      ],
+      "models": [
+        "doubao-seedance-2-0-260128",
+        "doubao-seedance-2-0-fast-260128",
+        "doubao-seedance-2-0-mini-260615",
+        "doubao-seedance-2-5-260628",
+        "ark-asset-library"
+      ],
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "path": "plugins/tasks/ark/1.0.0/plugin.js",
+          "sha256": "0a5ee57d0eba267b678c6b3e79fbead7ed041ab218fa137fc45116b72a9b5ee1",
+          "minApiVersion": 1,
+          "kind": "task"
+        }
+      ]
+    }
+  ]
+}

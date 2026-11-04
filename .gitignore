@@ -1,0 +1,17 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor swap/backup
+*~
+*.swp
+tools/pluginindex/pluginindex
+tools/pluginindex/pluginindex.exe
+
+# Local development scratch (upstream checkouts, probe binaries, dev instance)
+.work/

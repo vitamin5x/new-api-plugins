@@ -1,0 +1,4 @@
+# Repository files are hashed by byte: index.json records a sha256 of each
+# plugin.js, and the gateway verifies it after download. Checkout must keep the
+# stored bytes, or a Windows working copy would disagree with the hash.
+* text=auto eol=lf
