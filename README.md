@@ -35,6 +35,7 @@ CI runs `pluginindex check` on every PR and fails if `index.json` is stale, any 
 
 ## Documentation
 
+- [Plugin development guide](docs/plugin-development.md) — how to design a plugin's routes from a vendor's HTTP documentation, the host rules that decide whether a route works at all, the local debug loop, and publishing.
 - [Task plugin API v1](docs/plugin-api/README.md) — synchronized from `new-api/docs/plugin-api/`, including the [API reference](docs/plugin-api/v1.md), [TypeScript declarations](docs/plugin-api/v1.d.ts), and [JSON Schema](docs/plugin-api/v1.schema.json).
 - [Marketplace index format](docs/marketplace.md) — repository layout, version catalog, and installation integrity checks.
 
