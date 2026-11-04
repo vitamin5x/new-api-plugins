@@ -2,8 +2,8 @@
 
 A practical, end-to-end guide to writing a task plugin for this repository: how to
 design the route surface from a vendor's HTTP documentation, which host rules
-decide whether a route works at all, how to run and debug a plugin locally, and
-how to publish it so an installing gateway accepts it.
+decide whether a route works at all, how to ship a logo, how to run and debug a
+plugin locally, and how to publish it so an installing gateway accepts it.
 
 This guide is the *practical* companion to the contract documents. Read those for
 the authoritative shapes:
@@ -82,7 +82,52 @@ Plus two optional pairs:
 Only `meta`, `buildSubmitRequest`, `parseSubmitResponse`, and `parseTaskResult` are
 mandatory. Everything else is additive.
 
-## 3. Routes: the native surface
+## 3. The logo
+
+A plugin's logo ships as a **sidecar file**, never inside the manifest. Put it once
+per plugin key, beside the version directories — not inside a version directory:
+
+```text
+plugins/tasks/<key>/icon.svg     # preferred when both exist
+plugins/tasks/<key>/icon.png
+plugins/tasks/<key>/<version>/plugin.js
+```
+
+Rules that matter:
+
+- **PNG or SVG only.** A PNG must carry the PNG signature. An SVG must be
+  well-formed XML rooted at `svg`, with no `script` or `foreignObject` elements,
+  no event-handler attributes, no DOCTYPE, no `javascript:` values, and no
+  absolute `http(s)` references — inline the shapes, don't link them.
+- **At most 512 KiB.** A larger file fails index generation outright.
+- **One logo per key, shared by every version.** It is fetched from the index's
+  own origin and stored by the gateway apart from the plugin source, then served
+  from `GET /api/plugin/task/:key/icon` (optionally `?version=`).
+- **Transparent background, legible in both themes.** The panel renders it on
+  light and dark surfaces; supply artwork with a transparent or neutral
+  background rather than a baked-in white or black plate. A square canvas at
+  256–512 px is ample.
+
+`meta.icon` still exists and still matters — it is the **fallback** when no
+sidecar is present. Its priority order is:
+
+```text
+marketplace card logo → sidecar icon.svg / icon.png → meta.icon → text avatar
+```
+
+`meta.icon` takes either a LobeHub icon name (`Ark.Color`, `Doubao.Color`) or the
+`text` / `text:<label>` scheme for a generated text avatar. Inline data URIs and
+remote URLs are rejected. Ship a sidecar logo when the vendor has no LobeHub icon
+and you want real brand artwork; keep `meta.icon` set as the fallback for any host
+that renders the manifest without fetching the sidecar.
+
+Adding a logo **does not touch `plugin.js`** — its `sha256`, and therefore every
+already-declared version, stays valid. But the index records the logo's own
+`sha256` too, so the same byte-exactness rule applies: regenerate the index and
+commit the logo and `index.json` together. A binary image is never line-ending
+converted on checkout, so no `.gitattributes` change is needed for it.
+
+## 4. Routes: the native surface
 
 `meta.routes` declares the vendor-shaped addresses the plugin adds to the gateway.
 Each entry is:
@@ -142,13 +187,13 @@ Two rules decide what a plugin may declare and where the request actually goes.
    Write both roots explicitly. Getting this wrong is invisible until a reseller
    chain is introduced, at which point every call 404s.
 
-## 4. The four host rules that decide whether a route works
+## 5. The four host rules that decide whether a route works
 
 These are the ones that produce confusing failures. Each is enforced in the host
 **before or after** your plugin code runs, so a plugin can look internally correct
 and still never work.
 
-### 4.1 A body is mandatory on submit and dynamic routes
+### 5.1 A body is mandatory on submit and dynamic routes
 
 A bodyless `POST`/`DELETE` to a `submit` or `dynamic` route is rejected with
 **415** and the message `this route requires a JSON or multipart body`, before any
@@ -165,13 +210,13 @@ documents `DELETE .../tasks/{id}` with no body — and it will still be refused.
 return { url: ..., method: "DELETE", headers: ..., body: {} };
 ```
 
-### 4.2 A submit/dynamic decoder must return a non-empty `model`
+### 5.2 A submit/dynamic decoder must return a non-empty `model`
 
 The decoded intent's `model` must be a non-empty string, **and** it must appear in
 `meta.models`. A missing or foreign name fails with **400**:
 `decoded request is missing a model` / `model "x" is not served by this plugin`.
 
-### 4.3 …and that model must resolve to a channel
+### 5.3 …and that model must resolve to a channel
 
 This is the trap that costs the most time. Selecting a channel happens **by
 model**. If no enabled channel in the caller's group lists the model, the request
@@ -202,7 +247,7 @@ model-less route against a different model without republishing the plugin.
 > `model: ctx.model`, as the `jimeng` plugin does. Use this when the vendor call
 > does carry a model and you want the client's choice to decide the channel.
 
-### 4.4 A bodyless request can panic the host
+### 5.4 A bodyless request can panic the host
 
 Separately from §4.1, the host's request pipeline closes the outgoing request body
 unconditionally. When a descriptor returns no body, the underlying request ends up
@@ -213,7 +258,7 @@ with a `nil` body and the close panics — the client sees **500**
 Providing `body: {}` (as in §4.1) keeps the body non-nil and closes both holes at
 once. Treat "descriptor with no body" as a bug, not a style choice.
 
-## 5. Designing the surface from a vendor's documentation
+## 6. Designing the surface from a vendor's documentation
 
 1. **Mirror the vendor's paths** as closely as the reserved namespaces allow, so
    downstream clients keep their existing code. Change only what §3 forces you to.
@@ -250,9 +295,9 @@ once. Treat "descriptor with no body" as a bug, not a style choice.
    final length; hold the model's maximum and overlay the real facts from the
    completion body.
 
-## 6. Local development loop
+## 7. Local development loop
 
-### 6.1 One-time setup
+### 7.1 One-time setup
 
 You need a new-api checkout as a **sibling directory** (`../new-api`) — the index
 tool and the dev binary both depend on it.
@@ -279,7 +324,7 @@ with (§7). Start the dev binary with this directory as its working directory.
 > `127.0.0.1` are hijacked and fail with `os error 10061`. Pass
 > `--noproxy 127.0.0.1,localhost` to every local call.
 
-### 6.2 Load the plugin into the dev instance
+### 7.2 Load the plugin into the dev instance
 
 Upload it the same way an operator would — from the admin panel's task-plugin page,
 or `POST /api/plugin/task` with `{"source":"...","remark":"..."}`. The server
@@ -297,7 +342,7 @@ Re-uploading a **new version** is always allowed; reusing the same `key`+`versio
 with different source is rejected. Bump the version while iterating, or replace the
 row.
 
-### 6.3 Configure a channel
+### 7.3 Configure a channel
 
 A plugin does nothing until a channel binds it:
 
@@ -316,7 +361,7 @@ models are token- or unit-based per your `usageSchema`, not a flat per-call pric
 > production converts to a quota that can overflow the local field and fail with
 > `quota conversion overflow`.
 
-### 6.4 Test from the vendor's own documentation
+### 7.4 Test from the vendor's own documentation
 
 Derive every test case from the vendor doc — that is the contract you promise. For
 each endpoint, take the documented field table, build the smallest legal request,
@@ -336,14 +381,14 @@ forwarding — it is not a plugin failure. Confirm by calling the upstream direc
 and comparing; if the raw upstream answers the same way, the remaining difference
 is account configuration, not code.
 
-### 6.5 Lint before you commit
+### 7.5 Lint before you commit
 
 ```bash
 new-api plugin lint plugin.js
 new-api plugin test plugin.js --fixture golden.json
 ```
 
-### 6.6 Regenerate the index (never edit it by hand)
+### 7.6 Regenerate the index (never edit it by hand)
 
 ```bash
 cd tools/pluginindex
@@ -351,13 +396,13 @@ go run . generate ../..     # writes ../../index.json from the compiled meta
 go run . check ../..        # fails if the index is stale
 ```
 
-### 6.7 Write the changelog
+### 7.7 Write the changelog
 
 Every new version **must** ship `CHANGELOG.md` beside its `plugin.js`, in English,
 following the [release notes format](marketplace.md#release-notes). A new version
 without its sibling changelog is incomplete.
 
-### 6.8 Publish and verify
+### 7.8 Publish and verify
 
 ```bash
 git add plugins/tasks/<key>/<version>/ index.json
@@ -384,7 +429,7 @@ curl -sL <RAW_PLUGIN_URL> | grep -c $'\r'
 All three must agree. A mismatch is an install failure for every gateway, not a
 warning.
 
-## 7. Debugging playbook
+## 8. Debugging playbook
 
 Run with `DEBUG=true` and filter on the `task_plugin` subsystem. The host emits
 key/value lifecycle events through registry, routing, endpoint ownership, channel
@@ -419,7 +464,7 @@ private URLs** from plugin code (free-form output cannot be redacted by the host
 and **compare against the upstream directly** whenever a response looks wrong — it
 separates a plugin fault from an account or upstream fault in one call.
 
-## 8. Worked example: the Ark plugin
+## 9. Worked example: the Ark plugin
 
 `plugins/tasks/ark/1.1.0/plugin.js` — four routes covering three shapes:
 
@@ -441,10 +486,12 @@ Three ideas are worth copying:
   per-model resolution validation, *and* the generated `usageProfiles`, so the
   pricing table cannot drift from what the plugin actually accepts.
 
-## 9. New-plugin checklist
+## 10. New-plugin checklist
 
 - [ ] Directory name equals `meta.key` equals `meta.version`
 - [ ] `meta.author.name` present; `models` lists only names the upstream serves
+- [ ] Logo shipped as a sidecar `icon.svg` / `icon.png` beside the version
+      directories (≤ 512 KiB, transparent background, PNG signature or safe SVG)
 - [ ] Every route mirrored from the vendor doc, with only namespace-forced changes
 - [ ] `query` routes have no body; `submit`/`dynamic` routes always send one
 - [ ] Every decoder returns a non-empty, declared, channel-routable `model`
@@ -457,4 +504,5 @@ Three ideas are worth copying:
       empty-body call per required-argument endpoint
 - [ ] `CHANGELOG.md` written in English beside `plugin.js`
 - [ ] `index.json` regenerated; `go run . check ../..` passes
-- [ ] Published file's `sha256` matches the index and contains no CRLF
+- [ ] Published `plugin.js` and `icon.png` / `icon.svg` both hash to what the index
+      claims (`plugin.js` also contains no CRLF)

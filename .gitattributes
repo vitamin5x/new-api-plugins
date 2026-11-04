@@ -1,4 +1,9 @@
 # Repository files are hashed by byte: index.json records a sha256 of each
-# plugin.js, and the gateway verifies it after download. Checkout must keep the
-# stored bytes, or a Windows working copy would disagree with the hash.
+# plugin.js and of each sidecar icon (icon.svg / icon.png), and the gateway
+# verifies them after download. Checkout must keep the stored bytes, or a
+# Windows working copy would disagree with the hash.
+#
+# eol=lf applies to the text files. A binary sidecar icon is left alone: it
+# carries NUL bytes, so `text=auto` classifies it as binary and never rewrites
+# its line endings.
 * text=auto eol=lf

@@ -6,6 +6,10 @@
       "key": "ark",
       "name": "Ark",
       "icon": "Ark.Color",
+      "iconFile": {
+        "path": "plugins/tasks/ark/icon.png",
+        "sha256": "3a42ed1239444bd72d76b7b6a2bc774605da7dffb407900c41a85c3fd9ff0266"
+      },
       "description": {
         "en": "Volcengine Ark Seedance video generation and asset library through an upstream New API gateway",
         "zh": "经上游 New API 网关接入的火山方舟 Seedance 视频生成与素材库"
