@@ -458,8 +458,15 @@
         "doubao-seedance-2-0-mini-260615",
         "doubao-seedance-2-5-260628"
       ],
-      "latest": "1.2.0",
+      "latest": "1.3.0",
       "versions": [
+        {
+          "version": "1.3.0",
+          "path": "plugins/tasks/ark/1.3.0/plugin.js",
+          "sha256": "fb6ea446e534718866c780997e85c0f9af7cc6c72d3004d7d114d8607beb5094",
+          "minApiVersion": 1,
+          "kind": "task"
+        },
         {
           "version": "1.2.0",
           "path": "plugins/tasks/ark/1.2.0/plugin.js",

@@ -360,12 +360,24 @@ row.
 A plugin does nothing until a channel binds it:
 
 ```sql
--- channels: type 60 is a Task Plugin channel
+-- bind the plugin on a New API channel (type 60), never a Task Plugin channel (61)
 --   base_url  = the upstream (vendor host, or another New API gateway)
 --   models    = every model the channel serves — must cover meta.models (§4.3)
 --   setting   = {"task_plugin_key":"<meta.key>"}
 SELECT id, name, type, base_url, models, setting FROM channels;
 ```
+
+**The channel type decides the upstream kind, and only one type works.** A New
+API channel (type 60) gives the plugin `ctx.upstream.kind = "new_api"`, which is
+what a plugin that declares `upstreams: ["new_api"]` is written for: it addresses
+the upstream on the prefixed native routes, and the channel key is sent as the
+Bearer token. A Task Plugin channel (type 61) looks similar in the admin panel
+and binds the same plugin key, but it reports `kind = "vendor"`, so the plugin
+addresses vendor root paths and vendor auth instead. When the upstream serves the
+same path at both roots, that mistake hides: submissions still succeed and only
+the routes the upstream publishes under one root fail. The symptom is an upstream
+`404`/`Invalid URL` naming a path with the plugin prefix missing. Verify the type
+before debugging path construction.
 
 Then price the models under System Settings → Group & Model Pricing. Expected
 models are token- or unit-based per your `usageSchema`, not a flat per-call price.
@@ -467,6 +479,8 @@ Symptom → cause, fastest first:
 | `400 decoded request is missing a model` | §4.2 — decoder returned no model |
 | `400 model "x" is not served by this plugin` | §4.2 — name missing from `meta.models` |
 | `400 expr run error: invalid operation: <nil> * float64` | §6.6 — `extractUsage` returned `null` (or omitted a fact) on a model the gateway prices by expression. Report the profile's fields at zero instead. |
+| `404` whose message quotes an *upstream* "task not found" for a task you created | §7.3 — resolve the id the caller sent to its `originTasks` upstream id; a public gateway id means nothing to the upstream. Also check the channel type is 60. |
+| `Invalid URL (DELETE ...)` naming a path without the plugin prefix | §7.3 — a Task Plugin channel (type 61) reports `kind = "vendor"`, so the plugin dropped the prefix. Bind a New API channel (type 60). |
 | `503 Task request failed` + `no_available_channel` | §4.3 — placeholder model, or the channel doesn't list it |
 | `500 internal plugin route error` + panic in logs | §4.4 — descriptor returned no body |
 | `404` on a mirror of a vendor path | §3 — reserved namespace; serve it one segment in |
@@ -480,20 +494,25 @@ separates a plugin fault from an account or upstream fault in one call.
 
 ## 9. Worked example: the Ark plugin
 
-`plugins/tasks/ark/1.2.0/plugin.js` — four routes covering three shapes:
+`plugins/tasks/ark/1.3.0/plugin.js` — four routes covering three shapes:
 
 | Route | Type | Why |
 | --- | --- | --- |
 | `POST /ark/api/v3/contents/generations/tasks` | `submit` | Creates a task. The canonical case. |
 | `GET /ark/api/v3/contents/generations/tasks/:task_id` | `query` | Reads it back. No body allowed. |
 | `POST /ark/api/v3/` | `dynamic` | The asset library. Vendor path is `/api/v3/?Action=` (reserved), so it lives one segment in and forwards to the upstream root. `retainResult: false` — it answers once. |
-| `DELETE /ark/api/v3/contents/generations/tasks/:task_id` | `dynamic` | Answers once, no task to keep. Carries `body: {}` for §4.1/§4.4. |
+| `DELETE /ark/api/v3/contents/generations/tasks/:task_id` | `dynamic` | Answers once, no task to keep. Carries `body: {}` for §4.1/§4.4, and declares the path id as an origin task so the upstream receives the private id. |
 
-Three ideas are worth copying:
+Four ideas are worth copying:
 
 - **One descriptor builder, one header helper.** `buildSubmitRequest` funnels all
   three shapes through one function so URL construction and headers stay in a
   single auditable place — the most security-sensitive code in the plugin.
+- **Task ids are always translated.** A client only ever sees this gateway's
+  public ids, so every path that carries one declares it in `originTaskIds` and
+  sends `task.upstreamTaskId` instead. `originUpstreamTaskId` is the single
+  translation point; both the draft-reference rewrite and the delete route go
+  through it, and an id that cannot be resolved is refused rather than sent.
 - **Explicit roots.** `apiRoot()` vs `assetRoot()` encodes the two prefix rules from
   §3 as named functions rather than inline string concatenation.
 - **A shared capability table.** One `VIDEO_MODELS` map drives `meta.models`, the
@@ -516,6 +535,8 @@ Three ideas are worth copying:
 - [ ] Answers-once routes use `retainResult: false` and return an immediate terminal result
 - [ ] `extractUsage` reports zero-valued facts (never `null`) where nothing is metered
 - [ ] Vendor response envelopes passed through untouched
+- [ ] Any route whose path carries a task id declares it in `originTaskIds` and
+      translates it to `task.upstreamTaskId` before the upstream call
 - [ ] HTTP calls routed through `apiRoot()`/`assetRoot()`-style helpers for both upstream kinds
 - [ ] No credentials, headers, bodies, or private URLs printed from plugin code
 - [ ] Loaded into a dev instance and exercised against the vendor doc, including one
