@@ -489,6 +489,231 @@
           "kind": "task"
         }
       ]
+    },
+    {
+      "key": "kuajing",
+      "name": "Kuajing Wan",
+      "icon": "Bailian.Color",
+      "description": {
+        "en": "Wan 3.0 video generation through an upstream New API gateway",
+        "zh": "经上游 New API 网关接入的 Wan 3.0 视频生成"
+      },
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/kuajing/api/v1/services/aigc/video-generation/tasks",
+          "type": "submit",
+          "decode": "createTask",
+          "render": "taskCreated"
+        },
+        {
+          "method": "GET",
+          "path": "/kuajing/api/v1/services/aigc/video-generation/tasks/:task_id",
+          "type": "query",
+          "render": "taskStatus",
+          "taskIdParam": "task_id"
+        }
+      ],
+      "usageSchema": {
+        "media": {
+          "enum": [
+            "none",
+            "media"
+          ],
+          "description": {
+            "en": "Reference media input",
+            "zh": "参考素材输入"
+          },
+          "enumLabels": {
+            "media": {
+              "en": "With reference media",
+              "zh": "含参考素材"
+            },
+            "none": {
+              "en": "Prompt only",
+              "zh": "仅提示词"
+            }
+          }
+        },
+        "resolution": {
+          "enum": [
+            "480P",
+            "720P",
+            "1080P"
+          ],
+          "description": {
+            "en": "Output video resolution",
+            "zh": "输出视频分辨率"
+          },
+          "enumLabels": {
+            "1080P": {
+              "en": "1080P",
+              "zh": "1080P"
+            },
+            "480P": {
+              "en": "480P",
+              "zh": "480P"
+            },
+            "720P": {
+              "en": "720P",
+              "zh": "720P"
+            }
+          }
+        },
+        "seconds": {
+          "type": "number",
+          "unit": "second",
+          "description": {
+            "en": "Video generation unit price",
+            "zh": "视频生成单价"
+          }
+        }
+      },
+      "usageExamples": [
+        {
+          "label": "1080P · 5s",
+          "facts": {
+            "media": "none",
+            "resolution": "1080P",
+            "seconds": 5
+          }
+        },
+        {
+          "label": "720P · 10s",
+          "facts": {
+            "media": "none",
+            "resolution": "720P",
+            "seconds": 10
+          }
+        },
+        {
+          "label": "480P · 5s",
+          "facts": {
+            "media": "none",
+            "resolution": "480P",
+            "seconds": 5
+          }
+        },
+        {
+          "label": "1080P · 10s (with reference media)",
+          "facts": {
+            "media": "media",
+            "resolution": "1080P",
+            "seconds": 10
+          }
+        }
+      ],
+      "usageProfiles": [
+        {
+          "models": [
+            "wan3.0-video",
+            "wan3.0-video-prime"
+          ],
+          "schema": {
+            "media": {
+              "enum": [
+                "none",
+                "media"
+              ],
+              "description": {
+                "en": "Reference media input",
+                "zh": "参考素材输入"
+              },
+              "enumLabels": {
+                "media": {
+                  "en": "With reference media",
+                  "zh": "含参考素材"
+                },
+                "none": {
+                  "en": "Prompt only",
+                  "zh": "仅提示词"
+                }
+              }
+            },
+            "resolution": {
+              "enum": [
+                "480P",
+                "720P",
+                "1080P"
+              ],
+              "description": {
+                "en": "Output video resolution",
+                "zh": "输出视频分辨率"
+              },
+              "enumLabels": {
+                "1080P": {
+                  "en": "1080P",
+                  "zh": "1080P"
+                },
+                "480P": {
+                  "en": "480P",
+                  "zh": "480P"
+                },
+                "720P": {
+                  "en": "720P",
+                  "zh": "720P"
+                }
+              }
+            },
+            "seconds": {
+              "type": "number",
+              "unit": "second",
+              "description": {
+                "en": "Video generation unit price",
+                "zh": "视频生成单价"
+              }
+            }
+          },
+          "examples": [
+            {
+              "label": "1080P · 5s",
+              "facts": {
+                "media": "none",
+                "resolution": "1080P",
+                "seconds": 5
+              }
+            },
+            {
+              "label": "720P · 10s",
+              "facts": {
+                "media": "none",
+                "resolution": "720P",
+                "seconds": 10
+              }
+            },
+            {
+              "label": "480P · 5s",
+              "facts": {
+                "media": "none",
+                "resolution": "480P",
+                "seconds": 5
+              }
+            },
+            {
+              "label": "1080P · 10s (with reference media)",
+              "facts": {
+                "media": "media",
+                "resolution": "1080P",
+                "seconds": 10
+              }
+            }
+          ]
+        }
+      ],
+      "models": [
+        "wan3.0-video",
+        "wan3.0-video-prime"
+      ],
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "path": "plugins/tasks/kuajing/1.0.0/plugin.js",
+          "sha256": "67d455d74c327ffdf8b6a7aaedf2beb114bd2e5471f3cfaff709cc82686d80fe",
+          "minApiVersion": 1,
+          "kind": "task"
+        }
+      ]
     }
   ]
 }
