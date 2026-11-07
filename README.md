@@ -8,6 +8,7 @@ Official task-plugin marketplace for [new-api](https://github.com/QuantumNous/ne
 plugins/<kind>/<key>/<version>/plugin.js     # immutable once published
 plugins/<kind>/<key>/<version>/CHANGELOG.md  # required for every new version
 index.json                                 # generated — never edit by hand
+skills/<name>/                             # agent skills for developing plugins
 ```
 
 - `<kind>` — plugin kind directory. Currently only `tasks` (async task plugins: video/music generation). The directory is organization; the compiled plugin meta is the declaration.
@@ -40,6 +41,7 @@ CI runs `pluginindex check` on every PR and fails if `index.json` is stale, any 
 - [Plugin development guide](docs/plugin-development.md) — how to design a plugin's routes from a vendor's HTTP documentation, the host rules that decide whether a route works at all, the local debug loop, and publishing.
 - [Task plugin API v1](docs/plugin-api/README.md) — synchronized from `new-api/docs/plugin-api/`, including the [API reference](docs/plugin-api/v1.md), [TypeScript declarations](docs/plugin-api/v1.d.ts), and [JSON Schema](docs/plugin-api/v1.schema.json).
 - [Marketplace index format](docs/marketplace.md) — repository layout, version catalog, installation integrity checks, and why published versions are immutable.
+- [Plugin development skill](skills/newapi-plugin-dev/SKILL.md) — an agent skill for the whole loop: intake questions to ask before writing code, the route and hook design, changelog and index generation, and low-cost verification. Ships a compiling skeleton and three checkers (`probe_prefix.py`, `check_index.py`, `check_changelog.py`).
 
 ## Contributing a plugin
 
