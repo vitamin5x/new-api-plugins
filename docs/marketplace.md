@@ -59,6 +59,17 @@ index.json
 
 Directory names are organization; the compiled meta is the declaration. `tools/pluginindex` enforces that directory `<key>`/`<version>` agree with `meta.key`/`meta.version`, and that the kind directory matches the plugin kind (task plugins never declare `meta.kind`; the default is exactly the `tasks/` directory). Published version directories are immutable — ship changes as a new version.
 
+### Why published versions are immutable
+
+An installed plugin is considered current when the gateway's `meta.version` equals this index's `latest` for that key. The comparison is on the **version string alone** — the `sha256` is an install-time integrity check, not an update trigger.
+
+That makes an in-place edit to a published version the one failure mode the version table cannot express:
+
+- The edited bytes get a new `sha256` for a version number that was already published, so the index no longer describes what early installers actually downloaded.
+- Every gateway already on that version stays on it. Its version still equals `latest`, so it reports "up to date" and **is never offered the change** — the fix reaches new installs only, not the installations that reported the bug.
+
+Ship the change as the next version directory instead, so `latest` moves and the gateway sees an upgrade available. If a published version was already edited, restore its original bytes before publishing the fix as a new version.
+
 ## Release notes
 
 Every new or unpublished plugin version has an English `CHANGELOG.md` next to
