@@ -5,12 +5,12 @@
 // and response envelopes printed in the Ark API documentation unchanged while
 // the gateway meters the calls. Requests arrive on /kj-sd/api/v3/... and leave
 // for the upstream gateway's own copy of the same addresses: a New API gateway
-// that has this plugin installed serves them under that plugin's key, which is
-// /ark, and Ark itself serves the video task API at its host root.
+// that has this plugin installed serves them under the plugin's own native
+// prefix, and Ark itself serves the video task API at its host root.
 //
 // The asset library is the exception. Ark publishes it at the host root
-// (/api/v3/?Action=...), never below a plugin prefix, so it is addressed at the
-// upstream root on every upstream kind.
+// (/api/v3/?Action=...), never below /kj-sd, so it is addressed at the upstream
+// root on every upstream kind.
 //
 // A task id a client sends is this gateway's own public id. Every upstream call
 // that names a task by id resolves it against the origin tasks the host
@@ -84,21 +84,15 @@ function trimmed(value) {
 }
 
 // The video task API. Ark publishes it at its host root; a New API gateway that
-// has this plugin installed serves the same addresses under the upstream
-// plugin's own native prefix, which is its key. This is the upstream's key, not
-// this plugin's: our own public prefix is /kj-sd, and the copy of this plugin
-// running on the upstream gateway is published as /ark, so the forwarded call
-// must carry /ark.
-const UPSTREAM_PLUGIN_PREFIX = "/ark";
-
+// has this plugin installed serves the same addresses under this plugin's own
+// native prefix, which is /kj-sd.
 function apiRoot(ctx) {
-  return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? UPSTREAM_PLUGIN_PREFIX : "");
+  return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? "/kj-sd" : "");
 }
 
 // The asset library and the liveness session live at the upstream host root on
 // every upstream kind: Ark publishes them at /api/v3/?Action=... and never
-// below the upstream plugin prefix, so a gateway's plugin prefix does not carry
-// them either.
+// below /kj-sd, so a gateway's plugin prefix does not carry them either.
 function assetRoot(ctx) {
   return ctx.baseUrl;
 }

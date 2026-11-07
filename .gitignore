@@ -15,3 +15,4 @@ tools/pluginindex/pluginindex.exe
 
 # Local development scratch (upstream checkouts, probe binaries, dev instance)
 .work/
+.git-commit-msg.tmp
