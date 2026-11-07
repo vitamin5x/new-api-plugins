@@ -463,7 +463,7 @@
         {
           "version": "1.0.0",
           "path": "plugins/tasks/kj-sd/1.0.0/plugin.js",
-          "sha256": "61d5d7299fac2e4c1b103507daeae2cadbc1e1f87fb5ca6012046f4e953eb4cf",
+          "sha256": "aead5a6fbd3b2a6e14a0ff459ac4910141531fca381d0c964277643f3a3d2035",
           "minApiVersion": 1,
           "kind": "task"
         }
