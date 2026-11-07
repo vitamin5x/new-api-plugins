@@ -3,7 +3,7 @@
 //
 // The plugin exists so a downstream client can keep the paths and request
 // bodies it already sends while the gateway meters the calls. Requests arrive
-// on /kuajing/api/v1/services/aigc/video-generation/tasks and leave for the
+// on /kj-wan/api/v1/services/aigc/video-generation/tasks and leave for the
 // upstream gateway's own /api/v3/contents/generations/tasks, which is where the
 // upstream publishes the Wan task API. The two names differ on purpose: the
 // public path is this plugin's own stable address, and the upstream path is an
@@ -11,8 +11,8 @@
 //
 // Only two operations are wired, because Wan 3.0 publishes only two:
 //
-//   POST /kuajing/api/v1/services/aigc/video-generation/tasks      create
-//   GET  /kuajing/api/v1/services/aigc/video-generation/tasks/{id} query
+//   POST /kj-wan/api/v1/services/aigc/video-generation/tasks      create
+//   GET  /kj-wan/api/v1/services/aigc/video-generation/tasks/{id} query
 //
 // The upstream wire format is DashScope's: a request body carries `input` and
 // `parameters` rather than Ark's flat `content` array. Pass it through
@@ -319,7 +319,7 @@ export function extractUsageOnComplete(task, taskResult, body) {
 
 export const meta = {
   apiVersion: 1,
-  key: "kuajing",
+  key: "kj-wan",
   name: "Kuajing Wan",
   icon: "Bailian.Color",
   description: {
@@ -395,7 +395,7 @@ export const meta = {
     // API under a path a client already calls; it does not present the models
     // through the OpenAI video or responses surface, so nothing is declared
     // here that would need those protocol hooks implemented.
-    { method: "POST", path: "/kuajing/api/v1/services/aigc/video-generation/tasks", type: "submit", decode: "createTask", render: "taskCreated" },
-    { method: "GET", path: "/kuajing/api/v1/services/aigc/video-generation/tasks/:task_id", type: "query", render: "taskStatus" },
+    { method: "POST", path: "/kj-wan/api/v1/services/aigc/video-generation/tasks", type: "submit", decode: "createTask", render: "taskCreated" },
+    { method: "GET", path: "/kj-wan/api/v1/services/aigc/video-generation/tasks/:task_id", type: "query", render: "taskStatus" },
   ],
 };

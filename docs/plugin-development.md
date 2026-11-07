@@ -13,7 +13,7 @@ the authoritative shapes:
 - [`v1.d.ts`](plugin-api/v1.d.ts) / [`v1.schema.json`](plugin-api/v1.schema.json) — signatures and machine-readable shapes
 - [Marketplace index format](marketplace.md) — repository layout, integrity checks, release notes format
 
-Everything here was learned building the `ark` plugin in `plugins/tasks/ark/`; its
+Everything here was learned building the `ark` plugin in `plugins/tasks/kj-sd/`; its
 source is the worked example throughout.
 
 ---
@@ -49,7 +49,7 @@ plugin before any request arrives:
 ```js
 export const meta = {
   apiVersion: 1,
-  key: "ark",                    // must equal the directory name
+  key: "kj-sd",                  // must equal the directory name
   version: "1.1.0",              // must equal the directory name
   name: "Ark",
   author: { name: "opcopilot" }, // required
@@ -173,12 +173,12 @@ Two rules decide what a plugin may declare and where the request actually goes.
    ```js
    // The vendor serves the video API at its host root; a New API gateway that has
    // this plugin installed serves the same addresses under the plugin's own key
-   // prefix, which is /ark.
+   // prefix, which is /kj-sd.
    function apiRoot(ctx) {
-     return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? "/ark" : "");
+     return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? "/kj-sd" : "");
    }
    // The asset library lives at the host root on every upstream kind, because the
-   // vendor never publishes it below /ark and a gateway prefix does not carry it.
+   // vendor never publishes it below /kj-sd and a gateway prefix does not carry it.
    function assetRoot(ctx) {
      return ctx.baseUrl;
    }
@@ -494,14 +494,14 @@ separates a plugin fault from an account or upstream fault in one call.
 
 ## 9. Worked example: the Ark plugin
 
-`plugins/tasks/ark/1.3.0/plugin.js` — four routes covering three shapes:
+`plugins/tasks/kj-sd/1.0.0/plugin.js` — four routes covering three shapes:
 
 | Route | Type | Why |
 | --- | --- | --- |
-| `POST /ark/api/v3/contents/generations/tasks` | `submit` | Creates a task. The canonical case. |
-| `GET /ark/api/v3/contents/generations/tasks/:task_id` | `query` | Reads it back. No body allowed. |
-| `POST /ark/api/v3/` | `dynamic` | The asset library. Vendor path is `/api/v3/?Action=` (reserved), so it lives one segment in and forwards to the upstream root. `retainResult: false` — it answers once. |
-| `DELETE /ark/api/v3/contents/generations/tasks/:task_id` | `dynamic` | Answers once, no task to keep. Carries `body: {}` for §4.1/§4.4, and declares the path id as an origin task so the upstream receives the private id. |
+| `POST /kj-sd/api/v3/contents/generations/tasks` | `submit` | Creates a task. The canonical case. |
+| `GET /kj-sd/api/v3/contents/generations/tasks/:task_id` | `query` | Reads it back. No body allowed. |
+| `POST /kj-sd/api/v3/` | `dynamic` | The asset library. Vendor path is `/api/v3/?Action=` (reserved), so it lives one segment in and forwards to the upstream root. `retainResult: false` — it answers once. |
+| `DELETE /kj-sd/api/v3/contents/generations/tasks/:task_id` | `dynamic` | Answers once, no task to keep. Carries `body: {}` for §4.1/§4.4, and declares the path id as an origin task so the upstream receives the private id. |
 
 Four ideas are worth copying:
 

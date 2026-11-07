@@ -3,13 +3,13 @@
 //
 // The plugin exists so a downstream client can keep the paths, request bodies
 // and response envelopes printed in the Ark API documentation unchanged while
-// the gateway meters the calls. Requests arrive on /ark/api/v3/... and leave
+// the gateway meters the calls. Requests arrive on /kj-sd/api/v3/... and leave
 // for the upstream gateway's own copy of the same addresses: a New API gateway
 // that has this plugin installed serves them under the plugin's own native
 // prefix, and Ark itself serves the video task API at its host root.
 //
 // The asset library is the exception. Ark publishes it at the host root
-// (/api/v3/?Action=...), never below /ark, so it is addressed at the upstream
+// (/api/v3/?Action=...), never below /kj-sd, so it is addressed at the upstream
 // root on every upstream kind.
 //
 // A task id a client sends is this gateway's own public id. Every upstream call
@@ -85,14 +85,14 @@ function trimmed(value) {
 
 // The video task API. Ark publishes it at its host root; a New API gateway that
 // has this plugin installed serves the same addresses under this plugin's own
-// native prefix, which is /ark.
+// native prefix, which is /kj-sd.
 function apiRoot(ctx) {
-  return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? "/ark" : "");
+  return ctx.baseUrl + (ctx.upstream && ctx.upstream.kind === "new_api" ? "/kj-sd" : "");
 }
 
 // The asset library and the liveness session live at the upstream host root on
 // every upstream kind: Ark publishes them at /api/v3/?Action=... and never
-// below /ark, so a gateway's plugin prefix does not carry them either.
+// below /kj-sd, so a gateway's plugin prefix does not carry them either.
 function assetRoot(ctx) {
   return ctx.baseUrl;
 }
@@ -275,14 +275,14 @@ function capabilityUsageProfiles(models, usageSchema, usageExamples) {
 
 export const meta = {
   apiVersion: 1,
-  key: "ark",
-  name: "Ark",
+  key: "kj-sd",
+  name: "kuajing Ark",
   icon: "Ark.Color",
   description: {
     en: "Volcengine Ark Seedance video generation and asset library through an upstream New API gateway",
     zh: "经上游 New API 网关接入的火山方舟 Seedance 视频生成与素材库",
   },
-  version: "1.3.0",
+  version: "1.0.0",
   author: { name: "opcopilot" },
   // Only the real Seedance models. The asset-library and task-deletion routes
   // reuse one of them instead of declaring a placeholder of their own, because
@@ -300,17 +300,18 @@ export const meta = {
   routes: [
     // Ark's own paths. The gateway registers each one as declared, because the
     // first segment matches this plugin's key.
-    { method: "POST", path: "/ark/api/v3/contents/generations/tasks", type: "submit", decode: "createTask", render: "taskCreated" },
-    { method: "GET", path: "/ark/api/v3/contents/generations/tasks/:task_id", type: "query", render: "taskStatus" },
+    { method: "POST", path: "/kj-sd/api/v3/contents/generations/tasks", type: "submit", decode: "createTask", render: "taskCreated" },
+    { method: "GET", path: "/kj-sd/api/v3/contents/generations/tasks/:task_id", type: "query", render: "taskStatus" },
     // The asset library keeps Ark's shape but cannot keep its root address: the
     // host reserves /api, so a plugin route may never be published there. It is
     // served one segment in, on this plugin's own prefix, and forwarded to the
     // upstream host root, where Ark does publish it. Every asset action answers
     // once and leaves nothing to re-query, so its snapshot is never persisted.
-    { method: "POST", path: "/ark/api/v3/", type: "dynamic", decode: "decodeAssetAction", render: "renderAssetAction", retainResult: false },
+    { method: "POST", path: "/kj-sd/api/v3/", type: "dynamic", decode: "decodeAssetAction", render: "renderAssetAction", retainResult: false },
     // Deleting a finished task creates no task either; it is forwarded to
-    // Ark's own /ark path, which answers 204 with no body.
-    { method: "DELETE", path: "/ark/api/v3/contents/generations/tasks/:task_id", type: "dynamic", decode: "decodeTaskDelete", render: "renderTaskDelete", retainResult: false },
+    // this plugin's own path on the upstream gateway, which answers 204 with
+    // no body.
+    { method: "DELETE", path: "/kj-sd/api/v3/contents/generations/tasks/:task_id", type: "dynamic", decode: "decodeTaskDelete", render: "renderTaskDelete", retainResult: false },
   ],
   protocols: [
     { name: "openai_responses", supports: ["stream", "sync", "background"] },
